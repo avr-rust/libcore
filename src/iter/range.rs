@@ -238,11 +238,6 @@ step_impl_signed!(isize i8 i16 i32);
 step_impl_unsigned!(u64);
 #[cfg(target_pointer_width = "64")]
 step_impl_signed!(i64);
-// If the target pointer width is not 64-bits, we
-// assume here that it is less than 64-bits.
-#[cfg(not(target_pointer_width = "64"))]
-step_impl_no_between!(u64 i64);
-step_impl_no_between!(u128 i128);
 
 /// An adapter for stepping range iterators by a custom amount.
 ///
@@ -534,8 +529,8 @@ range_incl_exact_iter_impl!(u8 u16 i8 i16);
 //
 // They need to guarantee that .size_hint() is either exact, or that
 // the upper bound is None when it does not fit the type limits.
-range_trusted_len_impl!(usize isize u8 i8 u16 i16 u32 i32 i64 u64);
-range_incl_trusted_len_impl!(usize isize u8 i8 u16 i16 u32 i32 i64 u64);
+range_trusted_len_impl!(usize isize u8 i8 u16 i16 u32 i32);
+range_incl_trusted_len_impl!(usize isize u8 i8 u16 i16 u32 i32);
 
 #[stable(feature = "rust1", since = "1.0.0")]
 impl<A: Step + Clone> DoubleEndedIterator for ops::Range<A> where

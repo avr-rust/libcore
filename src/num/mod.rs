@@ -1191,22 +1191,6 @@ impl i32 {
         intrinsics::mul_with_overflow }
 }
 
-#[lang = "i64"]
-impl i64 {
-    int_impl! { i64, i64, u64, 64,
-        intrinsics::add_with_overflow,
-        intrinsics::sub_with_overflow,
-        intrinsics::mul_with_overflow }
-}
-
-#[lang = "i128"]
-impl i128 {
-    int_impl! { i128, i128, u128, 128,
-        intrinsics::add_with_overflow,
-        intrinsics::sub_with_overflow,
-        intrinsics::mul_with_overflow }
-}
-
 #[cfg(target_pointer_width = "16")]
 #[lang = "isize"]
 impl isize {
@@ -2252,30 +2236,6 @@ impl u32 {
         intrinsics::mul_with_overflow }
 }
 
-#[lang = "u64"]
-impl u64 {
-    uint_impl! { u64, u64, 64,
-        intrinsics::ctpop,
-        intrinsics::ctlz,
-        intrinsics::cttz,
-        intrinsics::bswap,
-        intrinsics::add_with_overflow,
-        intrinsics::sub_with_overflow,
-        intrinsics::mul_with_overflow }
-}
-
-#[lang = "u128"]
-impl u128 {
-    uint_impl! { u128, u128, 128,
-        intrinsics::ctpop,
-        intrinsics::ctlz,
-        intrinsics::cttz,
-        intrinsics::bswap,
-        intrinsics::add_with_overflow,
-        intrinsics::sub_with_overflow,
-        intrinsics::mul_with_overflow }
-}
-
 #[cfg(target_pointer_width = "16")]
 #[lang = "usize"]
 impl usize {
@@ -2468,7 +2428,7 @@ macro_rules! doit {
         }
     })*)
 }
-doit! { i8 i16 i32 i64 i128 isize u8 u16 u32 u64 u128 usize }
+doit! { i8 i16 i32 isize u8 u16 u32 usize }
 
 /// An error which can be returned when parsing an integer.
 ///

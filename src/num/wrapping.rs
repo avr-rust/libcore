@@ -117,7 +117,7 @@ macro_rules! sh_impl_all {
     )*)
 }
 
-sh_impl_all! { u8 u16 u32 u64 usize i8 i16 i32 i64 isize }
+sh_impl_all! { u8 u16 u32 usize i8 i16 i32 isize }
 
 // FIXME(30524): impl Op<T> for Wrapping<T>, impl OpAssign<T> for Wrapping<T>
 macro_rules! wrapping_impl {
@@ -307,7 +307,7 @@ macro_rules! wrapping_impl {
     )*)
 }
 
-wrapping_impl! { usize u8 u16 u32 u64 u128 isize i8 i16 i32 i64 i128 }
+wrapping_impl! { usize u8 u16 u32 isize i8 i16 i32 }
 
 mod shift_max {
     #![allow(non_upper_case_globals)]
