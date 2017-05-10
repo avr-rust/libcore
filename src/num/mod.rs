@@ -2386,22 +2386,6 @@ pub trait Float: Sized {
     fn to_radians(self) -> Self;
 }
 
-/// The error type returned when a checked integral type conversion fails.
-#[unstable(feature = "try_from", issue = "33417")]
-#[derive(Copy, Clone)]
-pub struct TryFromIntError(());
-
-impl TryFromIntError {
-    #[unstable(feature = "int_error_internals",
-               reason = "available through Error trait and this method should \
-                         not be exposed publicly",
-               issue = "0")]
-    #[doc(hidden)]
-    pub fn __description(&self) -> &str {
-        "out of range integral type conversion attempted"
-    }
-}
-
 #[doc(hidden)]
 trait FromStrRadixHelper: PartialOrd + Copy {
     fn min_value() -> Self;
@@ -2429,42 +2413,6 @@ macro_rules! doit {
     })*)
 }
 doit! { i8 i16 i32 isize u8 u16 u32 usize }
-
-/// An error which can be returned when parsing an integer.
-///
-/// This error is used as the error type for the `from_str_radix()` functions
-/// on the primitive integer types, such as [`i8::from_str_radix`].
-///
-/// [`i8::from_str_radix`]: ../../std/primitive.i8.html#method.from_str_radix
-#[derive(Clone, PartialEq, Eq)]
-#[stable(feature = "rust1", since = "1.0.0")]
-pub struct ParseIntError {
-    kind: IntErrorKind,
-}
-
-#[derive(Clone, PartialEq, Eq)]
-enum IntErrorKind {
-    Empty,
-    InvalidDigit,
-    Overflow,
-    Underflow,
-}
-
-impl ParseIntError {
-    #[unstable(feature = "int_error_internals",
-               reason = "available through Error trait and this method should \
-                         not be exposed publicly",
-               issue = "0")]
-    #[doc(hidden)]
-    pub fn __description(&self) -> &str {
-        match self.kind {
-            IntErrorKind::Empty => "cannot parse integer from empty string",
-            IntErrorKind::InvalidDigit => "invalid digit found in string",
-            IntErrorKind::Overflow => "number too large to fit in target type",
-            IntErrorKind::Underflow => "number too small to fit in target type",
-        }
-    }
-}
 
 // Conversion traits for primitive integer and float types
 // Conversions T -> T are covered by a blanket impl and therefore excluded
