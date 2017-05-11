@@ -240,13 +240,10 @@
 
 #![stable(feature = "rust1", since = "1.0.0")]
 
-use fmt;
-use iter::{FromIterator, FusedIterator, TrustedLen};
-
 /// `Result` is a type that represents either success (`Ok`) or failure (`Err`).
 ///
 /// See the [`std::result`](index.html) module documentation for details.
-#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Debug, Hash)]
+#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord)]
 #[must_use]
 #[stable(feature = "rust1", since = "1.0.0")]
 pub enum Result<T, E> {
@@ -708,114 +705,6 @@ impl<T, E> Result<T, E> {
     }
 }
 
-impl<T, E: fmt::Debug> Result<T, E> {
-    /// Unwraps a result, yielding the content of an `Ok`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the value is an `Err`, with a panic message provided by the
-    /// `Err`'s value.
-    ///
-    /// # Examples
-    ///
-    /// Basic usage:
-    ///
-    /// ```
-    /// let x: Result<u32, &str> = Ok(2);
-    /// assert_eq!(x.unwrap(), 2);
-    /// ```
-    ///
-    /// ```{.should_panic}
-    /// let x: Result<u32, &str> = Err("emergency failure");
-    /// x.unwrap(); // panics with `emergency failure`
-    /// ```
-    #[inline]
-    #[stable(feature = "rust1", since = "1.0.0")]
-    pub fn unwrap(self) -> T {
-        match self {
-            Ok(t) => t,
-            Err(e) => unwrap_failed("called `Result::unwrap()` on an `Err` value", e),
-        }
-    }
-
-    /// Unwraps a result, yielding the content of an `Ok`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the value is an `Err`, with a panic message including the
-    /// passed message, and the content of the `Err`.
-    ///
-    /// # Examples
-    ///
-    /// Basic usage:
-    ///
-    /// ```{.should_panic}
-    /// let x: Result<u32, &str> = Err("emergency failure");
-    /// x.expect("Testing expect"); // panics with `Testing expect: emergency failure`
-    /// ```
-    #[inline]
-    #[stable(feature = "result_expect", since = "1.4.0")]
-    pub fn expect(self, msg: &str) -> T {
-        match self {
-            Ok(t) => t,
-            Err(e) => unwrap_failed(msg, e),
-        }
-    }
-}
-
-impl<T: fmt::Debug, E> Result<T, E> {
-    /// Unwraps a result, yielding the content of an `Err`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the value is an `Ok`, with a custom panic message provided
-    /// by the `Ok`'s value.
-    ///
-    /// # Examples
-    ///
-    /// ```{.should_panic}
-    /// let x: Result<u32, &str> = Ok(2);
-    /// x.unwrap_err(); // panics with `2`
-    /// ```
-    ///
-    /// ```
-    /// let x: Result<u32, &str> = Err("emergency failure");
-    /// assert_eq!(x.unwrap_err(), "emergency failure");
-    /// ```
-    #[inline]
-    #[stable(feature = "rust1", since = "1.0.0")]
-    pub fn unwrap_err(self) -> E {
-        match self {
-            Ok(t) => unwrap_failed("called `Result::unwrap_err()` on an `Ok` value", t),
-            Err(e) => e,
-        }
-    }
-
-    /// Unwraps a result, yielding the content of an `Err`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the value is an `Ok`, with a panic message including the
-    /// passed message, and the content of the `Ok`.
-    ///
-    /// # Examples
-    ///
-    /// Basic usage:
-    ///
-    /// ```{.should_panic}
-    /// let x: Result<u32, &str> = Ok(10);
-    /// x.expect_err("Testing expect_err"); // panics with `Testing expect_err: 10`
-    /// ```
-    #[inline]
-    #[stable(feature = "result_expect_err", since = "1.17.0")]
-    pub fn expect_err(self, msg: &str) -> E {
-        match self {
-            Ok(t) => unwrap_failed(msg, t),
-            Err(e) => e,
-        }
-    }
-}
-
 impl<T: Default, E> Result<T, E> {
     /// Returns the contained value or a default
     ///
@@ -850,13 +739,6 @@ impl<T: Default, E> Result<T, E> {
             Err(_) => Default::default(),
         }
     }
-}
-
-// This is a separate function to reduce the code size of the methods
-#[inline(never)]
-#[cold]
-fn unwrap_failed<E: fmt::Debug>(msg: &str, error: E) -> ! {
-    panic!("{}: {:?}", msg, error)
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -926,7 +808,6 @@ impl<'a, T, E> IntoIterator for &'a mut Result<T, E> {
 /// [`Ok`]: enum.Result.html#variant.Ok
 /// [`Result`]: enum.Result.html
 /// [`Result::iter`]: enum.Result.html#method.iter
-#[derive(Debug)]
 #[stable(feature = "rust1", since = "1.0.0")]
 pub struct Iter<'a, T: 'a> { inner: Option<&'a T> }
 
@@ -952,12 +833,6 @@ impl<'a, T> DoubleEndedIterator for Iter<'a, T> {
 #[stable(feature = "rust1", since = "1.0.0")]
 impl<'a, T> ExactSizeIterator for Iter<'a, T> {}
 
-#[unstable(feature = "fused", issue = "35602")]
-impl<'a, T> FusedIterator for Iter<'a, T> {}
-
-#[unstable(feature = "trusted_len", issue = "37572")]
-unsafe impl<'a, A> TrustedLen for Iter<'a, A> {}
-
 #[stable(feature = "rust1", since = "1.0.0")]
 impl<'a, T> Clone for Iter<'a, T> {
     fn clone(&self) -> Iter<'a, T> { Iter { inner: self.inner } }
@@ -970,7 +845,6 @@ impl<'a, T> Clone for Iter<'a, T> {
 /// [`Ok`]: enum.Result.html#variant.Ok
 /// [`Result`]: enum.Result.html
 /// [`Result::iter_mut`]: enum.Result.html#method.iter_mut
-#[derive(Debug)]
 #[stable(feature = "rust1", since = "1.0.0")]
 pub struct IterMut<'a, T: 'a> { inner: Option<&'a mut T> }
 
@@ -996,12 +870,6 @@ impl<'a, T> DoubleEndedIterator for IterMut<'a, T> {
 #[stable(feature = "rust1", since = "1.0.0")]
 impl<'a, T> ExactSizeIterator for IterMut<'a, T> {}
 
-#[unstable(feature = "fused", issue = "35602")]
-impl<'a, T> FusedIterator for IterMut<'a, T> {}
-
-#[unstable(feature = "trusted_len", issue = "37572")]
-unsafe impl<'a, A> TrustedLen for IterMut<'a, A> {}
-
 /// An iterator over the value in a [`Ok`] variant of a [`Result`].
 ///
 /// The iterator yields one value if the result is [`Ok`], otherwise none.
@@ -1013,7 +881,6 @@ unsafe impl<'a, A> TrustedLen for IterMut<'a, A> {}
 /// [`Result`]: enum.Result.html
 /// [`into_iter`]: ../iter/trait.IntoIterator.html#tymethod.into_iter
 /// [`IntoIterator`]: ../iter/trait.IntoIterator.html
-#[derive(Debug)]
 #[stable(feature = "rust1", since = "1.0.0")]
 pub struct IntoIter<T> { inner: Option<T> }
 
@@ -1038,73 +905,3 @@ impl<T> DoubleEndedIterator for IntoIter<T> {
 
 #[stable(feature = "rust1", since = "1.0.0")]
 impl<T> ExactSizeIterator for IntoIter<T> {}
-
-#[unstable(feature = "fused", issue = "35602")]
-impl<T> FusedIterator for IntoIter<T> {}
-
-#[unstable(feature = "trusted_len", issue = "37572")]
-unsafe impl<A> TrustedLen for IntoIter<A> {}
-
-/////////////////////////////////////////////////////////////////////////////
-// FromIterator
-/////////////////////////////////////////////////////////////////////////////
-
-#[stable(feature = "rust1", since = "1.0.0")]
-impl<A, E, V: FromIterator<A>> FromIterator<Result<A, E>> for Result<V, E> {
-    /// Takes each element in the `Iterator`: if it is an `Err`, no further
-    /// elements are taken, and the `Err` is returned. Should no `Err` occur, a
-    /// container with the values of each `Result` is returned.
-    ///
-    /// Here is an example which increments every integer in a vector,
-    /// checking for overflow:
-    ///
-    /// ```
-    /// use std::u32;
-    ///
-    /// let v = vec![1, 2];
-    /// let res: Result<Vec<u32>, &'static str> = v.iter().map(|&x: &u32|
-    ///     if x == u32::MAX { Err("Overflow!") }
-    ///     else { Ok(x + 1) }
-    /// ).collect();
-    /// assert!(res == Ok(vec![2, 3]));
-    /// ```
-    #[inline]
-    fn from_iter<I: IntoIterator<Item=Result<A, E>>>(iter: I) -> Result<V, E> {
-        // FIXME(#11084): This could be replaced with Iterator::scan when this
-        // performance bug is closed.
-
-        struct Adapter<Iter, E> {
-            iter: Iter,
-            err: Option<E>,
-        }
-
-        impl<T, E, Iter: Iterator<Item=Result<T, E>>> Iterator for Adapter<Iter, E> {
-            type Item = T;
-
-            #[inline]
-            fn next(&mut self) -> Option<T> {
-                match self.iter.next() {
-                    Some(Ok(value)) => Some(value),
-                    Some(Err(err)) => {
-                        self.err = Some(err);
-                        None
-                    }
-                    None => None,
-                }
-            }
-
-            fn size_hint(&self) -> (usize, Option<usize>) {
-                let (_min, max) = self.iter.size_hint();
-                (0, max)
-            }
-        }
-
-        let mut adapter = Adapter { iter: iter.into_iter(), err: None };
-        let v: V = FromIterator::from_iter(adapter.by_ref());
-
-        match adapter.err {
-            Some(err) => Err(err),
-            None => Ok(v),
-        }
-    }
-}

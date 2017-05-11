@@ -196,7 +196,7 @@ pub struct AssertParamIsEq<T: Eq + ?Sized> { _field: ::marker::PhantomData<T> }
 /// let result = 2.cmp(&1);
 /// assert_eq!(Ordering::Greater, result);
 /// ```
-#[derive(Clone, Copy, PartialEq, Debug, Hash)]
+#[derive(Clone, Copy, PartialEq)]
 #[stable(feature = "rust1", since = "1.0.0")]
 pub enum Ordering {
     /// An ordering where a compared value is less [than another].
@@ -338,7 +338,7 @@ impl Ordering {
 /// v.sort_by_key(|&num| (num > 3, Reverse(num)));
 /// assert_eq!(v, vec![3, 2, 1, 6, 5, 4]);
 /// ```
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq)]
 #[unstable(feature = "reverse_cmp_key", issue = "40893")]
 pub struct Reverse<T>(pub T);
 

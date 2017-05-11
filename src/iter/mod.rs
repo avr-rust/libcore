@@ -300,7 +300,6 @@
 #![stable(feature = "rust1", since = "1.0.0")]
 
 use cmp;
-use fmt;
 use iter_private::TrustedRandomAccess;
 use usize;
 
@@ -343,7 +342,7 @@ mod traits;
 ///
 /// [`rev`]: trait.Iterator.html#method.rev
 /// [`Iterator`]: trait.Iterator.html
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 #[stable(feature = "rust1", since = "1.0.0")]
 pub struct Rev<T> {
@@ -408,7 +407,7 @@ unsafe impl<I> TrustedLen for Rev<I>
 /// [`Iterator`]: trait.Iterator.html
 #[stable(feature = "iter_cloned", since = "1.1.0")]
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Cloned<I> {
     it: I,
 }
@@ -486,7 +485,7 @@ unsafe impl<'a, I, T: 'a> TrustedLen for Cloned<I>
 ///
 /// [`cycle`]: trait.Iterator.html#method.cycle
 /// [`Iterator`]: trait.Iterator.html
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 #[stable(feature = "rust1", since = "1.0.0")]
 pub struct Cycle<I> {
@@ -527,7 +526,7 @@ impl<I> FusedIterator for Cycle<I> where I: Clone + Iterator {}
 ///
 /// [`chain`]: trait.Iterator.html#method.chain
 /// [`Iterator`]: trait.Iterator.html
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 #[stable(feature = "rust1", since = "1.0.0")]
 pub struct Chain<A, B> {
@@ -549,7 +548,7 @@ pub struct Chain<A, B> {
 //
 //  The fourth state (neither iterator is remaining) only occurs after Chain has
 //  returned None once, so we don't need to store this state.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 enum ChainState {
     // both front and back iterator are remaining
     Both,
@@ -720,7 +719,7 @@ unsafe impl<A, B> TrustedLen for Chain<A, B>
 ///
 /// [`zip`]: trait.Iterator.html#method.zip
 /// [`Iterator`]: trait.Iterator.html
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 #[stable(feature = "rust1", since = "1.0.0")]
 pub struct Zip<A, B> {
@@ -993,15 +992,6 @@ pub struct Map<I, F> {
     f: F,
 }
 
-#[stable(feature = "core_impl_debug", since = "1.9.0")]
-impl<I: fmt::Debug, F> fmt::Debug for Map<I, F> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("Map")
-            .field("iter", &self.iter)
-            .finish()
-    }
-}
-
 #[stable(feature = "rust1", since = "1.0.0")]
 impl<B, I: Iterator, F> Iterator for Map<I, F> where F: FnMut(I::Item) -> B {
     type Item = B;
@@ -1083,15 +1073,6 @@ pub struct Filter<I, P> {
     predicate: P,
 }
 
-#[stable(feature = "core_impl_debug", since = "1.9.0")]
-impl<I: fmt::Debug, P> fmt::Debug for Filter<I, P> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("Filter")
-            .field("iter", &self.iter)
-            .finish()
-    }
-}
-
 #[stable(feature = "rust1", since = "1.0.0")]
 impl<I: Iterator, P> Iterator for Filter<I, P> where P: FnMut(&I::Item) -> bool {
     type Item = I::Item;
@@ -1167,15 +1148,6 @@ pub struct FilterMap<I, F> {
     f: F,
 }
 
-#[stable(feature = "core_impl_debug", since = "1.9.0")]
-impl<I: fmt::Debug, F> fmt::Debug for FilterMap<I, F> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("FilterMap")
-            .field("iter", &self.iter)
-            .finish()
-    }
-}
-
 #[stable(feature = "rust1", since = "1.0.0")]
 impl<B, I: Iterator, F> Iterator for FilterMap<I, F>
     where F: FnMut(I::Item) -> Option<B>,
@@ -1225,7 +1197,7 @@ impl<B, I: FusedIterator, F> FusedIterator for FilterMap<I, F>
 ///
 /// [`enumerate`]: trait.Iterator.html#method.enumerate
 /// [`Iterator`]: trait.Iterator.html
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 #[stable(feature = "rust1", since = "1.0.0")]
 pub struct Enumerate<I> {
@@ -1334,7 +1306,7 @@ unsafe impl<I> TrustedLen for Enumerate<I>
 ///
 /// [`peekable`]: trait.Iterator.html#method.peekable
 /// [`Iterator`]: trait.Iterator.html
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 #[stable(feature = "rust1", since = "1.0.0")]
 pub struct Peekable<I: Iterator> {
@@ -1478,16 +1450,6 @@ pub struct SkipWhile<I, P> {
     predicate: P,
 }
 
-#[stable(feature = "core_impl_debug", since = "1.9.0")]
-impl<I: fmt::Debug, P> fmt::Debug for SkipWhile<I, P> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("SkipWhile")
-            .field("iter", &self.iter)
-            .field("flag", &self.flag)
-            .finish()
-    }
-}
-
 #[stable(feature = "rust1", since = "1.0.0")]
 impl<I: Iterator, P> Iterator for SkipWhile<I, P>
     where P: FnMut(&I::Item) -> bool
@@ -1532,16 +1494,6 @@ pub struct TakeWhile<I, P> {
     predicate: P,
 }
 
-#[stable(feature = "core_impl_debug", since = "1.9.0")]
-impl<I: fmt::Debug, P> fmt::Debug for TakeWhile<I, P> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("TakeWhile")
-            .field("iter", &self.iter)
-            .field("flag", &self.flag)
-            .finish()
-    }
-}
-
 #[stable(feature = "rust1", since = "1.0.0")]
 impl<I: Iterator, P> Iterator for TakeWhile<I, P>
     where P: FnMut(&I::Item) -> bool
@@ -1582,7 +1534,7 @@ impl<I, P> FusedIterator for TakeWhile<I, P>
 ///
 /// [`skip`]: trait.Iterator.html#method.skip
 /// [`Iterator`]: trait.Iterator.html
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 #[stable(feature = "rust1", since = "1.0.0")]
 pub struct Skip<I> {
@@ -1676,7 +1628,7 @@ impl<I> FusedIterator for Skip<I> where I: FusedIterator {}
 ///
 /// [`take`]: trait.Iterator.html#method.take
 /// [`Iterator`]: trait.Iterator.html
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 #[stable(feature = "rust1", since = "1.0.0")]
 pub struct Take<I> {
@@ -1749,16 +1701,6 @@ pub struct Scan<I, St, F> {
     state: St,
 }
 
-#[stable(feature = "core_impl_debug", since = "1.9.0")]
-impl<I: fmt::Debug, St: fmt::Debug, F> fmt::Debug for Scan<I, St, F> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("Scan")
-            .field("iter", &self.iter)
-            .field("state", &self.state)
-            .finish()
-    }
-}
-
 #[stable(feature = "rust1", since = "1.0.0")]
 impl<B, I, St, F> Iterator for Scan<I, St, F> where
     I: Iterator,
@@ -1798,19 +1740,6 @@ pub struct FlatMap<I, U: IntoIterator, F> {
     f: F,
     frontiter: Option<U::IntoIter>,
     backiter: Option<U::IntoIter>,
-}
-
-#[stable(feature = "core_impl_debug", since = "1.9.0")]
-impl<I: fmt::Debug, U: IntoIterator, F> fmt::Debug for FlatMap<I, U, F>
-    where U::IntoIter: fmt::Debug
-{
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("FlatMap")
-            .field("iter", &self.iter)
-            .field("frontiter", &self.frontiter)
-            .field("backiter", &self.backiter)
-            .finish()
-    }
 }
 
 #[stable(feature = "rust1", since = "1.0.0")]
@@ -1880,7 +1809,7 @@ impl<I, U, F> FusedIterator for FlatMap<I, U, F>
 ///
 /// [`fuse`]: trait.Iterator.html#method.fuse
 /// [`Iterator`]: trait.Iterator.html
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 #[stable(feature = "rust1", since = "1.0.0")]
 pub struct Fuse<I> {
@@ -2035,15 +1964,6 @@ impl<I> ExactSizeIterator for Fuse<I> where I: ExactSizeIterator {
 pub struct Inspect<I, F> {
     iter: I,
     f: F,
-}
-
-#[stable(feature = "core_impl_debug", since = "1.9.0")]
-impl<I: fmt::Debug, F> fmt::Debug for Inspect<I, F> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("Inspect")
-            .field("iter", &self.iter)
-            .finish()
-    }
 }
 
 impl<I: Iterator, F> Inspect<I, F> where F: FnMut(&I::Item) {

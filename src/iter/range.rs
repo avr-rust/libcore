@@ -249,7 +249,7 @@ step_impl_no_between!(u128 i128);
 /// The resulting iterator handles overflow by stopping. The `A`
 /// parameter is the type being iterated over, while `R` is the range
 /// type (usually one of `std::ops::{Range, RangeFrom, RangeInclusive}`.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 #[unstable(feature = "step_by", reason = "recent addition",
            issue = "27741")]
 pub struct StepBy<A, R> {

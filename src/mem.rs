@@ -17,8 +17,6 @@
 
 use clone;
 use cmp;
-use fmt;
-use hash;
 use intrinsics;
 use marker::{Copy, PhantomData, Sized};
 use ptr;
@@ -688,22 +686,6 @@ impl<T> cmp::PartialEq for Discriminant<T> {
 #[unstable(feature = "discriminant_value", reason = "recently added, follows RFC", issue = "24263")]
 impl<T> cmp::Eq for Discriminant<T> {}
 
-#[unstable(feature = "discriminant_value", reason = "recently added, follows RFC", issue = "24263")]
-impl<T> hash::Hash for Discriminant<T> {
-    fn hash<H: hash::Hasher>(&self, state: &mut H) {
-        self.0.hash(state);
-    }
-}
-
-#[unstable(feature = "discriminant_value", reason = "recently added, follows RFC", issue = "24263")]
-impl<T> fmt::Debug for Discriminant<T> {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        fmt.debug_tuple("Discriminant")
-           .field(&self.0)
-           .finish()
-    }
-}
-
 /// Returns a value uniquely identifying the enum variant in `v`.
 ///
 /// If `T` is not an enum, calling this function will not result in undefined behavior, but the
@@ -842,15 +824,6 @@ impl<T> ::ops::DerefMut for ManuallyDrop<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         unsafe {
             &mut self.value
-        }
-    }
-}
-
-#[unstable(feature = "manually_drop", issue = "40673")]
-impl<T: ::fmt::Debug> ::fmt::Debug for ManuallyDrop<T> {
-    fn fmt(&self, fmt: &mut ::fmt::Formatter) -> ::fmt::Result {
-        unsafe {
-            fmt.debug_tuple("ManuallyDrop").field(&self.value).finish()
         }
     }
 }

@@ -21,8 +21,6 @@
 
 use borrow::{Borrow, BorrowMut};
 use cmp::Ordering;
-use fmt;
-use hash::{Hash, self};
 use marker::Unsize;
 use slice::{Iter, IterMut};
 
@@ -127,20 +125,6 @@ macro_rules! array_impls {
             impl<T:Copy> Clone for [T; $N] {
                 fn clone(&self) -> [T; $N] {
                     *self
-                }
-            }
-
-            #[stable(feature = "rust1", since = "1.0.0")]
-            impl<T: Hash> Hash for [T; $N] {
-                fn hash<H: hash::Hasher>(&self, state: &mut H) {
-                    Hash::hash(&self[..], state)
-                }
-            }
-
-            #[stable(feature = "rust1", since = "1.0.0")]
-            impl<T: fmt::Debug> fmt::Debug for [T; $N] {
-                fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                    fmt::Debug::fmt(&&self[..], f)
                 }
             }
 

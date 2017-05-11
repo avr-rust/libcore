@@ -154,7 +154,7 @@ use mem;
 // which basically means it must be `Option`.
 
 /// The `Option` type. See [the module level documentation](index.html) for more.
-#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Debug, Hash)]
+#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord)]
 #[stable(feature = "rust1", since = "1.0.0")]
 pub enum Option<T> {
     /// No value
@@ -861,7 +861,7 @@ impl<T> From<T> for Option<T> {
 // The Option Iterators
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 struct Item<A> {
     opt: Option<A>
 }
@@ -904,7 +904,6 @@ unsafe impl<A> TrustedLen for Item<A> {}
 /// [`Some`]: enum.Option.html#variant.Some
 /// [`Option::iter`]: enum.Option.html#method.iter
 #[stable(feature = "rust1", since = "1.0.0")]
-#[derive(Debug)]
 pub struct Iter<'a, A: 'a> { inner: Item<&'a A> }
 
 #[stable(feature = "rust1", since = "1.0.0")]
@@ -949,7 +948,6 @@ impl<'a, A> Clone for Iter<'a, A> {
 /// [`Some`]: enum.Option.html#variant.Some
 /// [`Option::iter_mut`]: enum.Option.html#method.iter_mut
 #[stable(feature = "rust1", since = "1.0.0")]
-#[derive(Debug)]
 pub struct IterMut<'a, A: 'a> { inner: Item<&'a mut A> }
 
 #[stable(feature = "rust1", since = "1.0.0")]
@@ -985,7 +983,7 @@ unsafe impl<'a, A> TrustedLen for IterMut<'a, A> {}
 /// [`Option`]: enum.Option.html
 /// [`Some`]: enum.Option.html#variant.Some
 /// [`Option::into_iter`]: enum.Option.html#method.into_iter
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 #[stable(feature = "rust1", since = "1.0.0")]
 pub struct IntoIter<A> { inner: Item<A> }
 

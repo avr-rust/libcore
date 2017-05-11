@@ -38,7 +38,6 @@
 use borrow::Borrow;
 use cmp::Ordering::{self, Less, Equal, Greater};
 use cmp;
-use fmt;
 use intrinsics::assume;
 use iter::*;
 use ops::{FnMut, self};
@@ -50,8 +49,6 @@ use ptr;
 use mem;
 use marker::{Copy, Send, Sync, Sized, self};
 use iter_private::TrustedRandomAccess;
-
-mod sort;
 
 #[repr(C)]
 struct Repr<T> {
@@ -207,19 +204,6 @@ pub trait SliceExt {
 
     #[stable(feature = "copy_from_slice", since = "1.9.0")]
     fn copy_from_slice(&mut self, src: &[Self::Item]) where Self::Item: Copy;
-
-    #[unstable(feature = "sort_unstable", issue = "40585")]
-    fn sort_unstable(&mut self)
-        where Self::Item: Ord;
-
-    #[unstable(feature = "sort_unstable", issue = "40585")]
-    fn sort_unstable_by<F>(&mut self, compare: F)
-        where F: FnMut(&Self::Item, &Self::Item) -> Ordering;
-
-    #[unstable(feature = "sort_unstable", issue = "40585")]
-    fn sort_unstable_by_key<B, F>(&mut self, f: F)
-        where F: FnMut(&Self::Item) -> B,
-              B: Ord;
 }
 
 // Use macros to be generic over const/mut
@@ -617,28 +601,6 @@ impl<T> SliceExt for [T] {
               Q: Ord
     {
         self.binary_search_by(|k| f(k).borrow().cmp(b))
-    }
-
-    #[inline]
-    fn sort_unstable(&mut self)
-        where Self::Item: Ord
-    {
-        sort::quicksort(self, |a, b| a.lt(b));
-    }
-
-    #[inline]
-    fn sort_unstable_by<F>(&mut self, mut compare: F)
-        where F: FnMut(&Self::Item, &Self::Item) -> Ordering
-    {
-        sort::quicksort(self, |a, b| compare(a, b) == Ordering::Less);
-    }
-
-    #[inline]
-    fn sort_unstable_by_key<B, F>(&mut self, mut f: F)
-        where F: FnMut(&Self::Item) -> B,
-              B: Ord
-    {
-        sort::quicksort(self, |a, b| f(a).lt(&f(b)));
     }
 }
 
@@ -1322,15 +1284,6 @@ pub struct Iter<'a, T: 'a> {
     _marker: marker::PhantomData<&'a T>,
 }
 
-#[stable(feature = "core_impl_debug", since = "1.9.0")]
-impl<'a, T: 'a + fmt::Debug> fmt::Debug for Iter<'a, T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_tuple("Iter")
-            .field(&self.as_slice())
-            .finish()
-    }
-}
-
 #[stable(feature = "rust1", since = "1.0.0")]
 unsafe impl<'a, T: Sync> Sync for Iter<'a, T> {}
 #[stable(feature = "rust1", since = "1.0.0")]
@@ -1437,15 +1390,6 @@ pub struct IterMut<'a, T: 'a> {
     ptr: *mut T,
     end: *mut T,
     _marker: marker::PhantomData<&'a mut T>,
-}
-
-#[stable(feature = "core_impl_debug", since = "1.9.0")]
-impl<'a, T: 'a + fmt::Debug> fmt::Debug for IterMut<'a, T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_tuple("IterMut")
-            .field(&make_slice!(self.ptr, self.end))
-            .finish()
-    }
 }
 
 #[stable(feature = "rust1", since = "1.0.0")]
@@ -1592,16 +1536,6 @@ pub struct Split<'a, T:'a, P> where P: FnMut(&T) -> bool {
     finished: bool
 }
 
-#[stable(feature = "core_impl_debug", since = "1.9.0")]
-impl<'a, T: 'a + fmt::Debug, P> fmt::Debug for Split<'a, T, P> where P: FnMut(&T) -> bool {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("Split")
-            .field("v", &self.v)
-            .field("finished", &self.finished)
-            .finish()
-    }
-}
-
 // FIXME(#19839) Remove in favor of `#[derive(Clone)]`
 #[stable(feature = "rust1", since = "1.0.0")]
 impl<'a, T, P> Clone for Split<'a, T, P> where P: Clone + FnMut(&T) -> bool {
@@ -1681,16 +1615,6 @@ pub struct SplitMut<'a, T:'a, P> where P: FnMut(&T) -> bool {
     v: &'a mut [T],
     pred: P,
     finished: bool
-}
-
-#[stable(feature = "core_impl_debug", since = "1.9.0")]
-impl<'a, T: 'a + fmt::Debug, P> fmt::Debug for SplitMut<'a, T, P> where P: FnMut(&T) -> bool {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("SplitMut")
-            .field("v", &self.v)
-            .field("finished", &self.finished)
-            .finish()
-    }
 }
 
 impl<'a, T, P> SplitIter for SplitMut<'a, T, P> where P: FnMut(&T) -> bool {
@@ -1781,16 +1705,6 @@ pub struct RSplit<'a, T:'a, P> where P: FnMut(&T) -> bool {
 }
 
 #[unstable(feature = "slice_rsplit", issue = "41020")]
-impl<'a, T: 'a + fmt::Debug, P> fmt::Debug for RSplit<'a, T, P> where P: FnMut(&T) -> bool {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("RSplit")
-            .field("v", &self.inner.v)
-            .field("finished", &self.inner.finished)
-            .finish()
-    }
-}
-
-#[unstable(feature = "slice_rsplit", issue = "41020")]
 impl<'a, T, P> Iterator for RSplit<'a, T, P> where P: FnMut(&T) -> bool {
     type Item = &'a [T];
 
@@ -1838,16 +1752,6 @@ pub struct RSplitMut<'a, T:'a, P> where P: FnMut(&T) -> bool {
 }
 
 #[unstable(feature = "slice_rsplit", issue = "41020")]
-impl<'a, T: 'a + fmt::Debug, P> fmt::Debug for RSplitMut<'a, T, P> where P: FnMut(&T) -> bool {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("RSplitMut")
-            .field("v", &self.inner.v)
-            .field("finished", &self.inner.finished)
-            .finish()
-    }
-}
-
-#[unstable(feature = "slice_rsplit", issue = "41020")]
 impl<'a, T, P> SplitIter for RSplitMut<'a, T, P> where P: FnMut(&T) -> bool {
     #[inline]
     fn finish(&mut self) -> Option<&'a mut [T]> {
@@ -1887,7 +1791,6 @@ impl<'a, T, P> FusedIterator for RSplitMut<'a, T, P> where P: FnMut(&T) -> bool 
 /// An private iterator over subslices separated by elements that
 /// match a predicate function, splitting at most a fixed number of
 /// times.
-#[derive(Debug)]
 struct GenericSplitN<I> {
     iter: I,
     count: usize,
@@ -1924,15 +1827,6 @@ pub struct SplitN<'a, T: 'a, P> where P: FnMut(&T) -> bool {
     inner: GenericSplitN<Split<'a, T, P>>
 }
 
-#[stable(feature = "core_impl_debug", since = "1.9.0")]
-impl<'a, T: 'a + fmt::Debug, P> fmt::Debug for SplitN<'a, T, P> where P: FnMut(&T) -> bool {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("SplitN")
-            .field("inner", &self.inner)
-            .finish()
-    }
-}
-
 /// An iterator over subslices separated by elements that match a
 /// predicate function, limited to a given number of splits, starting
 /// from the end of the slice.
@@ -1944,15 +1838,6 @@ impl<'a, T: 'a + fmt::Debug, P> fmt::Debug for SplitN<'a, T, P> where P: FnMut(&
 #[stable(feature = "rust1", since = "1.0.0")]
 pub struct RSplitN<'a, T: 'a, P> where P: FnMut(&T) -> bool {
     inner: GenericSplitN<RSplit<'a, T, P>>
-}
-
-#[stable(feature = "core_impl_debug", since = "1.9.0")]
-impl<'a, T: 'a + fmt::Debug, P> fmt::Debug for RSplitN<'a, T, P> where P: FnMut(&T) -> bool {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("RSplitN")
-            .field("inner", &self.inner)
-            .finish()
-    }
 }
 
 /// An iterator over subslices separated by elements that match a predicate
@@ -1967,15 +1852,6 @@ pub struct SplitNMut<'a, T: 'a, P> where P: FnMut(&T) -> bool {
     inner: GenericSplitN<SplitMut<'a, T, P>>
 }
 
-#[stable(feature = "core_impl_debug", since = "1.9.0")]
-impl<'a, T: 'a + fmt::Debug, P> fmt::Debug for SplitNMut<'a, T, P> where P: FnMut(&T) -> bool {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("SplitNMut")
-            .field("inner", &self.inner)
-            .finish()
-    }
-}
-
 /// An iterator over subslices separated by elements that match a
 /// predicate function, limited to a given number of splits, starting
 /// from the end of the slice.
@@ -1987,15 +1863,6 @@ impl<'a, T: 'a + fmt::Debug, P> fmt::Debug for SplitNMut<'a, T, P> where P: FnMu
 #[stable(feature = "rust1", since = "1.0.0")]
 pub struct RSplitNMut<'a, T: 'a, P> where P: FnMut(&T) -> bool {
     inner: GenericSplitN<RSplitMut<'a, T, P>>
-}
-
-#[stable(feature = "core_impl_debug", since = "1.9.0")]
-impl<'a, T: 'a + fmt::Debug, P> fmt::Debug for RSplitNMut<'a, T, P> where P: FnMut(&T) -> bool {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("RSplitNMut")
-            .field("inner", &self.inner)
-            .finish()
-    }
 }
 
 macro_rules! forward_iterator {
@@ -2034,7 +1901,6 @@ forward_iterator! { RSplitNMut: T, &'a mut [T] }
 ///
 /// [`windows`]: ../../std/primitive.slice.html#method.windows
 /// [slices]: ../../std/primitive.slice.html
-#[derive(Debug)]
 #[stable(feature = "rust1", since = "1.0.0")]
 pub struct Windows<'a, T:'a> {
     v: &'a [T],
@@ -2136,7 +2002,6 @@ impl<'a, T> FusedIterator for Windows<'a, T> {}
 ///
 /// [`chunks`]: ../../std/primitive.slice.html#method.chunks
 /// [slices]: ../../std/primitive.slice.html
-#[derive(Debug)]
 #[stable(feature = "rust1", since = "1.0.0")]
 pub struct Chunks<'a, T:'a> {
     v: &'a [T],
@@ -2245,7 +2110,6 @@ impl<'a, T> FusedIterator for Chunks<'a, T> {}
 ///
 /// [`chunks_mut`]: ../../std/primitive.slice.html#method.chunks_mut
 /// [slices]: ../../std/primitive.slice.html
-#[derive(Debug)]
 #[stable(feature = "rust1", since = "1.0.0")]
 pub struct ChunksMut<'a, T:'a> {
     v: &'a mut [T],
@@ -2392,15 +2256,6 @@ pub unsafe fn from_raw_parts<'a, T>(p: *const T, len: usize) -> &'a [T] {
 #[stable(feature = "rust1", since = "1.0.0")]
 pub unsafe fn from_raw_parts_mut<'a, T>(p: *mut T, len: usize) -> &'a mut [T] {
     mem::transmute(Repr { data: p, len: len })
-}
-
-// This function is public only because there is no other way to unit test heapsort.
-#[unstable(feature = "sort_internals", reason = "internal to sort module", issue = "0")]
-#[doc(hidden)]
-pub fn heapsort<T, F>(v: &mut [T], mut is_less: F)
-    where F: FnMut(&T, &T) -> bool
-{
-    sort::heapsort(v, &mut is_less);
 }
 
 //

@@ -48,8 +48,6 @@
 
 #![stable(feature = "rust1", since = "1.0.0")]
 
-use str::FromStr;
-
 /// A cheap reference-to-reference conversion. Used to convert a value to a
 /// reference value within generic code.
 ///
@@ -404,16 +402,5 @@ impl AsRef<str> for str {
     #[inline]
     fn as_ref(&self) -> &str {
         self
-    }
-}
-
-// FromStr implies TryFrom<&str>
-#[unstable(feature = "try_from", issue = "33417")]
-impl<'a, T> TryFrom<&'a str> for T where T: FromStr
-{
-    type Error = <T as FromStr>::Err;
-
-    fn try_from(s: &'a str) -> Result<T, Self::Error> {
-        FromStr::from_str(s)
     }
 }

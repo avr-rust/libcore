@@ -18,8 +18,6 @@
 
 use intrinsics;
 use ops::{CoerceUnsized, Deref};
-use fmt;
-use hash;
 use marker::{PhantomData, Unsize};
 use mem;
 use nonzero::NonZero;
@@ -836,27 +834,6 @@ macro_rules! fnptr_impls_safety_abi {
                 (*self as usize).cmp(&(*other as usize))
             }
         }
-
-        #[stable(feature = "fnptr_impls", since = "1.4.0")]
-        impl<Ret, $($Arg),*> hash::Hash for $FnTy {
-            fn hash<HH: hash::Hasher>(&self, state: &mut HH) {
-                state.write_usize(*self as usize)
-            }
-        }
-
-        #[stable(feature = "fnptr_impls", since = "1.4.0")]
-        impl<Ret, $($Arg),*> fmt::Pointer for $FnTy {
-            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                fmt::Pointer::fmt(&(*self as *const ()), f)
-            }
-        }
-
-        #[stable(feature = "fnptr_impls", since = "1.4.0")]
-        impl<Ret, $($Arg),*> fmt::Debug for $FnTy {
-            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                fmt::Pointer::fmt(&(*self as *const ()), f)
-            }
-        }
     }
 }
 
@@ -989,13 +966,6 @@ pub struct Unique<T: ?Sized> {
 #[unstable(feature = "unique", issue = "27730")]
 unsafe impl<T: Send + ?Sized> Send for Unique<T> { }
 
-/// `Unique` pointers are `Sync` if `T` is `Sync` because the data they
-/// reference is unaliased. Note that this aliasing invariant is
-/// unenforced by the type system; the abstraction using the
-/// `Unique` must enforce it.
-#[unstable(feature = "unique", issue = "27730")]
-unsafe impl<T: Sync + ?Sized> Sync for Unique<T> { }
-
 #[unstable(feature = "unique", issue = "27730")]
 impl<T: ?Sized> Unique<T> {
     /// Creates a new `Unique`.
@@ -1031,13 +1001,6 @@ impl<T:?Sized> Deref for Unique<T> {
     }
 }
 
-#[unstable(feature = "unique", issue = "27730")]
-impl<T> fmt::Pointer for Unique<T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Pointer::fmt(&*self.pointer, f)
-    }
-}
-
 /// A wrapper around a raw non-null `*mut T` that indicates that the possessor
 /// of this wrapper has shared ownership of the referent. Useful for
 /// building abstractions like `Rc<T>` or `Arc<T>`, which internally
@@ -1059,11 +1022,6 @@ pub struct Shared<T: ?Sized> {
 // NB: This impl is unnecessary, but should provide better error messages.
 #[unstable(feature = "shared", issue = "27730")]
 impl<T: ?Sized> !Send for Shared<T> { }
-
-/// `Shared` pointers are not `Sync` because the data they reference may be aliased.
-// NB: This impl is unnecessary, but should provide better error messages.
-#[unstable(feature = "shared", issue = "27730")]
-impl<T: ?Sized> !Sync for Shared<T> { }
 
 #[unstable(feature = "shared", issue = "27730")]
 impl<T: ?Sized> Shared<T> {
@@ -1105,12 +1063,5 @@ impl<T: ?Sized> Deref for Shared<T> {
     #[inline]
     fn deref(&self) -> &*const T {
         unsafe { mem::transmute(&*self.pointer) }
-    }
-}
-
-#[unstable(feature = "shared", issue = "27730")]
-impl<T> fmt::Pointer for Shared<T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Pointer::fmt(&*self.pointer, f)
     }
 }
