@@ -51,48 +51,36 @@
 // Since libcore defines many fundamental lang items, all tests live in a
 // separate crate, libcoretest, to avoid bizarre issues.
 
-#![crate_name = "core"]
 #![stable(feature = "core", since = "1.6.0")]
-#![crate_type = "rlib"]
-#![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png",
-       html_favicon_url = "https://doc.rust-lang.org/favicon.ico",
-       html_root_url = "https://doc.rust-lang.org/nightly/",
-       html_playground_url = "https://play.rust-lang.org/",
-       issue_tracker_base_url = "https://github.com/rust-lang/rust/issues/",
-       test(no_crate_inject, attr(deny(warnings))),
-       test(attr(allow(dead_code, deprecated, unused_variables, unused_mut))))]
 
-#![no_core]
-#![deny(missing_docs)]
-#![deny(missing_debug_implementations)]
-#![deny(warnings)]
-
-#![feature(allow_internal_unstable)]
-#![feature(asm)]
-#![feature(associated_type_defaults)]
-#![feature(associated_consts)]
-#![feature(cfg_target_feature)]
-#![feature(cfg_target_has_atomic)]
-#![feature(concat_idents)]
-#![feature(const_fn)]
-#![feature(custom_attribute)]
-#![feature(fundamental)]
-#![feature(i128_type)]
-#![feature(inclusive_range_syntax)]
-#![feature(intrinsics)]
-#![feature(lang_items)]
-#![feature(never_type)]
 #![feature(no_core)]
+#![feature(lang_items)]
+#![feature(fundamental)]
+#![feature(intrinsics)]
 #![feature(on_unimplemented)]
 #![feature(optin_builtin_traits)]
-#![feature(prelude_import)]
-#![feature(repr_simd, platform_intrinsics)]
-#![feature(rustc_attrs)]
-#![feature(specialization)]
-#![feature(staged_api)]
 #![feature(unboxed_closures)]
+#![feature(associated_type_defaults)]
+#![feature(asm)]
+#![feature(abi_avr_interrupt)]
+#![feature(i128_type)]
 #![feature(untagged_unions)]
-#![feature(unwind_attributes)]
+#![feature(specialization)]
+#![feature(inclusive_range_syntax)]
+
+#![no_core]
+
+#![feature(never_type)]
+#![feature(rustc_attrs)]
+#![feature(allow_internal_unstable)]
+#![feature(prelude_import)]
+#![feature(staged_api)]
+#![feature(associated_consts)]
+#![feature(const_fn)]
+
+#![allow(unused_variables)]
+#![allow(dead_code)]
+#![allow(unused_imports)]
 
 #[prelude_import]
 #[allow(unused)]
@@ -100,7 +88,6 @@ use prelude::v1::*;
 
 #[macro_use]
 mod macros;
-
 #[macro_use]
 mod internal_macros;
 
@@ -136,46 +123,24 @@ mod uint_macros;
 #[macro_use]
 pub mod num;
 
-/* The libcore prelude, not as all-encompassing as the libstd prelude */
 
-pub mod prelude;
-
-/* Core modules for ownership management */
-
+pub mod result;
+pub mod panicking;
+pub mod clone;
+pub mod cmp;
+pub mod ops;
 pub mod intrinsics;
+pub mod default;
+mod marker;
+pub mod option;
+pub mod ptr;
 pub mod mem;
 pub mod nonzero;
-pub mod ptr;
-
-/* Core language traits */
-
-pub mod marker;
-pub mod ops;
-pub mod cmp;
-pub mod clone;
-pub mod default;
 pub mod convert;
-pub mod borrow;
-
-/* Core types and methods on primitives */
-
-pub mod any;
-pub mod array;
-pub mod sync;
-pub mod cell;
-pub mod char;
-pub mod panicking;
-pub mod iter;
-pub mod option;
-pub mod raw;
-pub mod result;
-
-pub mod slice;
-pub mod str;
-pub mod hash;
-pub mod fmt;
-
-// note: does not need to be public
-mod char_private;
 mod iter_private;
-mod tuple;
+pub mod iter;
+pub mod borrow;
+pub mod slice;
+pub mod array;
+
+pub mod prelude;
