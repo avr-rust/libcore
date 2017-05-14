@@ -109,6 +109,9 @@
 #![cfg_attr(not(stage0), feature(const_cell_new))]
 #![cfg_attr(not(stage0), feature(const_nonzero_new))]
 
+#![allow(unused_variables)]
+#![allow(dead_code)]
+
 #[prelude_import]
 #[allow(unused)]
 use prelude::v1::*;
