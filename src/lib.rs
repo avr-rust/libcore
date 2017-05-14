@@ -94,6 +94,9 @@
 #![feature(untagged_unions)]
 #![feature(unwind_attributes)]
 
+#![allow(unused_variables)]
+#![allow(dead_code)]
+
 #[prelude_import]
 #[allow(unused)]
 use prelude::v1::*;
