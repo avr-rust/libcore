@@ -15,7 +15,6 @@
 use convert::TryFrom;
 use fmt;
 use intrinsics;
-use str::FromStr;
 
 /// Provides intentionally-wrapped arithmetic on `T`.
 ///
@@ -89,12 +88,6 @@ impl<T: fmt::UpperHex> fmt::UpperHex for Wrapping<T> {
 
 mod wrapping;
 
-// All these modules are technically private and only exposed for coretests:
-pub mod flt2dec;
-pub mod dec2flt;
-pub mod bignum;
-pub mod diy_float;
-
 // `Int` + `SignedInt` implemented for signed integers
 macro_rules! int_impl {
     ($SelfT:ty, $ActualT:ident, $UnsignedT:ty, $BITS:expr,
@@ -127,26 +120,6 @@ macro_rules! int_impl {
         #[inline]
         pub const fn max_value() -> Self {
             !Self::min_value()
-        }
-
-        /// Converts a string slice in a given base to an integer.
-        ///
-        /// Leading and trailing whitespace represent an error.
-        ///
-        /// # Panics
-        ///
-        /// This function panics if `radix` is not in the range from 2 to 36.
-        ///
-        /// # Examples
-        ///
-        /// Basic usage:
-        ///
-        /// ```
-        /// assert_eq!(i32::from_str_radix("A", 16), Ok(10));
-        /// ```
-        #[stable(feature = "rust1", since = "1.0.0")]
-        pub fn from_str_radix(src: &str, radix: u32) -> Result<Self, ParseIntError> {
-            from_str_radix(src, radix)
         }
 
         /// Returns the number of ones in the binary representation of `self`.
@@ -1289,22 +1262,6 @@ macro_rules! uint_impl {
         #[cfg_attr(not(stage0), rustc_const_unstable(feature = "const_max_value"))]
         #[inline]
         pub const fn max_value() -> Self { !0 }
-
-        /// Converts a string slice in a given base to an integer.
-        ///
-        /// Leading and trailing whitespace represent an error.
-        ///
-        /// # Examples
-        ///
-        /// Basic usage:
-        ///
-        /// ```
-        /// assert_eq!(u32::from_str_radix("A", 16), Ok(10));
-        /// ```
-        #[stable(feature = "rust1", since = "1.0.0")]
-        pub fn from_str_radix(src: &str, radix: u32) -> Result<Self, ParseIntError> {
-            from_str_radix(src, radix)
-        }
 
         /// Returns the number of ones in the binary representation of `self`.
         ///
@@ -2450,19 +2407,6 @@ pub trait Float: Sized {
     fn min(self, other: Self) -> Self;
 }
 
-macro_rules! from_str_radix_int_impl {
-    ($($t:ty)*) => {$(
-        #[stable(feature = "rust1", since = "1.0.0")]
-        impl FromStr for $t {
-            type Err = ParseIntError;
-            fn from_str(src: &str) -> Result<Self, ParseIntError> {
-                from_str_radix(src, 10)
-            }
-        }
-    )*}
-}
-from_str_radix_int_impl! { isize i8 i16 i32 i64 i128 usize u8 u16 u32 u64 u128 }
-
 /// The error type returned when a checked integral type conversion fails.
 #[unstable(feature = "try_from", issue = "33417")]
 #[derive(Debug, Copy, Clone)]
@@ -2718,119 +2662,6 @@ macro_rules! doit {
     })*)
 }
 doit! { i8 i16 i32 isize u8 u16 u32 usize }
-
-fn from_str_radix<T: FromStrRadixHelper>(src: &str, radix: u32) -> Result<T, ParseIntError> {
-    use self::IntErrorKind::*;
-    use self::ParseIntError as PIE;
-
-    assert!(radix >= 2 && radix <= 36,
-           "from_str_radix_int: must lie in the range `[2, 36]` - found {}",
-           radix);
-
-    if src.is_empty() {
-        return Err(PIE { kind: Empty });
-    }
-
-    let is_signed_ty = T::from_u32(0) > T::min_value();
-
-    // all valid digits are ascii, so we will just iterate over the utf8 bytes
-    // and cast them to chars. .to_digit() will safely return None for anything
-    // other than a valid ascii digit for the given radix, including the first-byte
-    // of multi-byte sequences
-    let src = src.as_bytes();
-
-    let (is_positive, digits) = match src[0] {
-        b'+' => (true, &src[1..]),
-        b'-' if is_signed_ty => (false, &src[1..]),
-        _ => (true, src),
-    };
-
-    if digits.is_empty() {
-        return Err(PIE { kind: Empty });
-    }
-
-    let mut result = T::from_u32(0);
-    if is_positive {
-        // The number is positive
-        for &c in digits {
-            let x = match (c as char).to_digit(radix) {
-                Some(x) => x,
-                None => return Err(PIE { kind: InvalidDigit }),
-            };
-            result = match result.checked_mul(radix) {
-                Some(result) => result,
-                None => return Err(PIE { kind: Overflow }),
-            };
-            result = match result.checked_add(x) {
-                Some(result) => result,
-                None => return Err(PIE { kind: Overflow }),
-            };
-        }
-    } else {
-        // The number is negative
-        for &c in digits {
-            let x = match (c as char).to_digit(radix) {
-                Some(x) => x,
-                None => return Err(PIE { kind: InvalidDigit }),
-            };
-            result = match result.checked_mul(radix) {
-                Some(result) => result,
-                None => return Err(PIE { kind: Underflow }),
-            };
-            result = match result.checked_sub(x) {
-                Some(result) => result,
-                None => return Err(PIE { kind: Underflow }),
-            };
-        }
-    }
-    Ok(result)
-}
-
-/// An error which can be returned when parsing an integer.
-///
-/// This error is used as the error type for the `from_str_radix()` functions
-/// on the primitive integer types, such as [`i8::from_str_radix`].
-///
-/// [`i8::from_str_radix`]: ../../std/primitive.i8.html#method.from_str_radix
-#[derive(Debug, Clone, PartialEq, Eq)]
-#[stable(feature = "rust1", since = "1.0.0")]
-pub struct ParseIntError {
-    kind: IntErrorKind,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-enum IntErrorKind {
-    Empty,
-    InvalidDigit,
-    Overflow,
-    Underflow,
-}
-
-impl ParseIntError {
-    #[unstable(feature = "int_error_internals",
-               reason = "available through Error trait and this method should \
-                         not be exposed publicly",
-               issue = "0")]
-    #[doc(hidden)]
-    pub fn __description(&self) -> &str {
-        match self.kind {
-            IntErrorKind::Empty => "cannot parse integer from empty string",
-            IntErrorKind::InvalidDigit => "invalid digit found in string",
-            IntErrorKind::Overflow => "number too large to fit in target type",
-            IntErrorKind::Underflow => "number too small to fit in target type",
-        }
-    }
-}
-
-#[stable(feature = "rust1", since = "1.0.0")]
-impl fmt::Display for ParseIntError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.__description().fmt(f)
-    }
-}
-
-#[stable(feature = "rust1", since = "1.0.0")]
-pub use num::dec2flt::ParseFloatError;
 
 // Conversion traits for primitive integer and float types
 // Conversions T -> T are covered by a blanket impl and therefore excluded
