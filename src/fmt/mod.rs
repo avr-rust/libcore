@@ -15,13 +15,9 @@
 use cell::{UnsafeCell, Cell, RefCell, Ref, RefMut};
 use marker::PhantomData;
 use mem;
-use num::flt2dec;
 use ops::Deref;
 use result;
-use slice;
-use str;
 
-mod float;
 mod num;
 mod builders;
 
@@ -1166,86 +1162,6 @@ impl<'a> Formatter<'a> {
             self.buf.write_str(fill)?;
         }
 
-        Ok(())
-    }
-
-    /// Takes the formatted parts and applies the padding.
-    /// Assumes that the caller already has rendered the parts with required precision,
-    /// so that `self.precision` can be ignored.
-    fn pad_formatted_parts(&mut self, formatted: &flt2dec::Formatted) -> Result {
-        if let Some(mut width) = self.width {
-            // for the sign-aware zero padding, we render the sign first and
-            // behave as if we had no sign from the beginning.
-            let mut formatted = formatted.clone();
-            let old_fill = self.fill;
-            let old_align = self.align;
-            let mut align = old_align;
-            if self.sign_aware_zero_pad() {
-                // a sign always goes first
-                let sign = unsafe { str::from_utf8_unchecked(formatted.sign) };
-                self.buf.write_str(sign)?;
-
-                // remove the sign from the formatted parts
-                formatted.sign = b"";
-                width = if width < sign.len() { 0 } else { width - sign.len() };
-                align = rt::v1::Alignment::Right;
-                self.fill = '0';
-                self.align = rt::v1::Alignment::Right;
-            }
-
-            // remaining parts go through the ordinary padding process.
-            let len = formatted.len();
-            let ret = if width <= len { // no padding
-                self.write_formatted_parts(&formatted)
-            } else {
-                self.with_padding(width - len, align, |f| {
-                    f.write_formatted_parts(&formatted)
-                })
-            };
-            self.fill = old_fill;
-            self.align = old_align;
-            ret
-        } else {
-            // this is the common case and we take a shortcut
-            self.write_formatted_parts(formatted)
-        }
-    }
-
-    fn write_formatted_parts(&mut self, formatted: &flt2dec::Formatted) -> Result {
-        fn write_bytes(buf: &mut Write, s: &[u8]) -> Result {
-            buf.write_str(unsafe { str::from_utf8_unchecked(s) })
-        }
-
-        if !formatted.sign.is_empty() {
-            write_bytes(self.buf, formatted.sign)?;
-        }
-        for part in formatted.parts {
-            match *part {
-                flt2dec::Part::Zero(mut nzeroes) => {
-                    const ZEROES: &'static str = // 64 zeroes
-                        "0000000000000000000000000000000000000000000000000000000000000000";
-                    while nzeroes > ZEROES.len() {
-                        self.buf.write_str(ZEROES)?;
-                        nzeroes -= ZEROES.len();
-                    }
-                    if nzeroes > 0 {
-                        self.buf.write_str(&ZEROES[..nzeroes])?;
-                    }
-                }
-                flt2dec::Part::Num(mut v) => {
-                    let mut s = [0; 5];
-                    let len = part.len();
-                    for c in s[..len].iter_mut().rev() {
-                        *c = b'0' + (v % 10) as u8;
-                        v /= 10;
-                    }
-                    write_bytes(self.buf, &s[..len])?;
-                }
-                flt2dec::Part::Copy(buf) => {
-                    write_bytes(self.buf, buf)?;
-                }
-            }
-        }
         Ok(())
     }
 
