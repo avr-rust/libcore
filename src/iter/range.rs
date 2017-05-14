@@ -175,7 +175,6 @@ step_impl_signed!([i64: u64]);
 // assume here that it is less than 64-bits.
 #[cfg(not(target_pointer_width = "64"))]
 step_impl_no_between!(u64 i64);
-step_impl_no_between!(u128 i128);
 
 macro_rules! range_exact_iter_impl {
     ($($t:ty)*) => ($(

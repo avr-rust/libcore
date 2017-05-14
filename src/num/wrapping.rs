@@ -321,7 +321,7 @@ macro_rules! wrapping_impl {
     )*)
 }
 
-wrapping_impl! { usize u8 u16 u32 u64 u128 isize i8 i16 i32 i64 i128 }
+wrapping_impl! { usize u8 u16 u32 u64 isize i8 i16 i32 i64 }
 
 macro_rules! wrapping_int_impl {
     ($($t:ty)*) => ($(
@@ -628,7 +628,7 @@ macro_rules! wrapping_int_impl {
     )*)
 }
 
-wrapping_int_impl! { usize u8 u16 u32 u64 u128 isize i8 i16 i32 i64 i128 }
+wrapping_int_impl! { usize u8 u16 u32 u64 isize i8 i16 i32 i64 }
 
 
 mod shift_max {
