@@ -115,6 +115,9 @@
 #![cfg_attr(stage0, feature(target_feature))]
 #![cfg_attr(stage0, feature(cfg_target_feature))]
 
+#![allow(unused_variables)]
+#![allow(dead_code)]
+
 #[prelude_import]
 #[allow(unused)]
 use prelude::v1::*;
