@@ -41,22 +41,14 @@ use fmt;
 #[cold] #[inline(never)] // this is the slow path, always
 #[lang = "panic"]
 pub fn panic(expr_file_line_col: &(&'static str, &'static str, u32, u32)) -> ! {
-    // Use Arguments::new_v1 instead of format_args!("{}", expr) to potentially
-    // reduce size overhead. The format_args! macro uses str's Display trait to
-    // write expr, which calls Formatter::pad, which must accommodate string
-    // truncation and padding (even though none is used here). Using
-    // Arguments::new_v1 may allow the compiler to omit Formatter::pad from the
-    // output binary, saving up to a few kilobytes.
-    let (expr, file, line, col) = *expr_file_line_col;
-    panic_fmt(fmt::Arguments::new_v1(&[expr], &[]), &(file, line, col))
+    loop {}
 }
 
 #[cold] #[inline(never)]
 #[lang = "panic_bounds_check"]
 fn panic_bounds_check(file_line_col: &(&'static str, u32, u32),
                      index: usize, len: usize) -> ! {
-    panic_fmt(format_args!("index out of bounds: the len is {} but the index is {}",
-                           len, index), file_line_col)
+    loop {}
 }
 
 #[cold] #[inline(never)]

@@ -20,8 +20,7 @@ macro_rules! panic {
         $crate::panicking::panic(&($msg, file!(), line!(), __rust_unstable_column!()))
     });
     ($fmt:expr, $($arg:tt)*) => ({
-        $crate::panicking::panic_fmt(format_args!($fmt, $($arg)*),
-                                     &(file!(), line!(), __rust_unstable_column!()))
+        loop {}
     });
 }
 
