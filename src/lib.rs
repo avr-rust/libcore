@@ -141,8 +141,6 @@ mod uint_macros;
 #[path = "num/u64.rs"]   pub mod u64;
 #[path = "num/u128.rs"]   pub mod u128;
 
-#[path = "num/f32.rs"]   pub mod f32;
-#[path = "num/f64.rs"]   pub mod f64;
 
 #[macro_use]
 pub mod num;
