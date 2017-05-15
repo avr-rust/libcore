@@ -159,7 +159,6 @@ pub mod borrow;
 
 pub mod any;
 pub mod array;
-pub mod sync;
 pub mod cell;
 pub mod char;
 pub mod panicking;
