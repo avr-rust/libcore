@@ -20,6 +20,7 @@ use result;
 
 mod num;
 mod builders;
+mod float_avr_hack;
 
 #[unstable(feature = "fmt_flags_align", issue = "27726")]
 /// Possible alignments returned by `Formatter::align`
