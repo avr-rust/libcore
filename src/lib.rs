@@ -211,35 +211,3 @@ pub mod heap {
 mod iter_private;
 mod tuple;
 mod unit;
-
-// Pull in the the `coresimd` crate directly into libcore. This is where all the
-// architecture-specific (and vendor-specific) intrinsics are defined. AKA
-// things like SIMD and such. Note that the actual source for all this lies in a
-// different repository, rust-lang-nursery/stdsimd. That's why the setup here is
-// a bit wonky.
-#[allow(unused_macros)]
-macro_rules! test_v16 { ($item:item) => {}; }
-#[allow(unused_macros)]
-macro_rules! test_v32 { ($item:item) => {}; }
-#[allow(unused_macros)]
-macro_rules! test_v64 { ($item:item) => {}; }
-#[allow(unused_macros)]
-macro_rules! test_v128 { ($item:item) => {}; }
-#[allow(unused_macros)]
-macro_rules! test_v256 { ($item:item) => {}; }
-#[allow(unused_macros)]
-macro_rules! test_v512 { ($item:item) => {}; }
-#[allow(unused_macros)]
-macro_rules! vector_impl { ($([$f:ident, $($args:tt)*]),*) => { $($f!($($args)*);)* } }
-#[path = "../stdsimd/coresimd/mod.rs"]
-#[allow(missing_docs, missing_debug_implementations, dead_code, unused_imports)]
-#[unstable(feature = "stdsimd", issue = "48556")]
-#[cfg(not(stage0))] // allow changes to how stdsimd works in stage0
-mod coresimd;
-
-#[unstable(feature = "stdsimd", issue = "48556")]
-#[cfg(not(stage0))]
-pub use coresimd::simd;
-#[stable(feature = "simd_arch", since = "1.27.0")]
-#[cfg(not(stage0))]
-pub use coresimd::arch;
